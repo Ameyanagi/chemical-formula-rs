@@ -9,9 +9,8 @@ group          = {
     (("(" ~ (expr)+ ~ ")") | ("[" ~ (expr)+ ~ "]") | ("{" ~ (expr)+ ~ "}")) ~ stoichiometry
 }
 
-separator = { " " | "\t" | "." | "@" | NEWLINE }
-
-expr = _{
+separator = _{ " " | "\t" | "." | "@" | "/" | NEWLINE }
+expr      = _{
     element
   | group
   | separator

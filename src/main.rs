@@ -8,27 +8,8 @@ use pest::{pratt_parser::PrattParser, Parser};
 use pest_derive::Parser;
 
 mod element;
-
-#[derive(Parser)]
-#[grammar = "formula.pest"]
-pub struct ChemicalFormula {}
-
-lazy_static::lazy_static! {
-    static ref PRATT_PARSER: PrattParser<Rule> = {
-        use pest::pratt_parser::{Assoc::*, Op};
-        use Rule::*;
-
-        PrattParser::new()
-        .op(Op::infix(number, Left))
-        };
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct Formula {
-    pub element: HashSet<element::ElementSymbol>,
-    pub stoichiometry: HashMap<element::ElementSymbol, f64>,
-    pub wt_ratio: HashMap<element::ElementSymbol, f64>,
-}
+mod parser;
+use parser::parse_formula;
 
 // pub fn parse_formula(s: &str) -> Result<Formula, Box<dyn Error>> {
 //     let pairs = ChemicalFormula::parse(Rule::formula, s)?;
@@ -66,4 +47,6 @@ pub struct Formula {
 
 fn main() {
     let input = fs::read_to_string("src/input.txt").unwrap();
+
+    println!("{:?}", parse_formula(&input).unwrap());
 }

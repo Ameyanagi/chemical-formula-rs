@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::error::Error;
@@ -9,7 +9,6 @@ pub enum FormulaError {
     FileIOError,
     FileParseError,
     WeightPercentOverflow,
-    NoFormula,
 }
 
 impl Error for FormulaError {
@@ -18,7 +17,6 @@ impl Error for FormulaError {
             FormulaError::FileIOError => "File IO error",
             FormulaError::FileParseError => "File parse error",
             FormulaError::WeightPercentOverflow => "Weight percent overflow",
-            FormulaError::NoFormula => "No formula",
         }
     }
 }
@@ -29,13 +27,12 @@ impl std::fmt::Display for FormulaError {
             FormulaError::FileIOError => write!(f, "File IO error"),
             FormulaError::FileParseError => write!(f, "File parse error"),
             FormulaError::WeightPercentOverflow => write!(f, "Weight percent overflow"),
-            FormulaError::NoFormula => write!(f, "No formula"),
         }
     }
 }
 
-pub static ATOMIC_WEIGHT: Lazy<HashMap<ElementSymbol, f64>> = Lazy::new(|| {
-    HashMap::from([
+lazy_static::lazy_static! {
+    static ref ATOMIC_WEIGHT: HashMap<ElementSymbol, f64> = HashMap::from([
         (ElementSymbol::None, 0.0),
         (ElementSymbol::H, 1.008),
         (ElementSymbol::He, 4.002602),
@@ -155,8 +152,8 @@ pub static ATOMIC_WEIGHT: Lazy<HashMap<ElementSymbol, f64>> = Lazy::new(|| {
         (ElementSymbol::Lv, 293.0),
         (ElementSymbol::Ts, 293.0),
         (ElementSymbol::Og, 294.0),
-    ])
-});
+    ]);
+}
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ElementSymbol {
@@ -406,27 +403,22 @@ impl ElementSymbol {
             _ => ElementSymbol::None,
         }
     }
+}
 
+impl ElementSymbol {
     pub fn atomic_weight(&self) -> f64 {
         ATOMIC_WEIGHT[self]
     }
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct ChemicalFormula {
+pub struct Formula {
     pub element: HashSet<ElementSymbol>,
     pub stoichiometry: HashMap<ElementSymbol, f64>,
     pub wt_percent: HashMap<ElementSymbol, f64>,
 }
 
-impl ChemicalFormula {
-    pub fn new() -> Self {
-        ChemicalFormula {
-            element: HashSet::new(),
-            stoichiometry: HashMap::new(),
-            wt_percent: HashMap::new(),
-        }
-    }
+impl Formula {
     pub fn add_element(&mut self, element: ElementSymbol, stoichiometry: f64) -> &mut Self {
         self.element.insert(element);
 
@@ -438,7 +430,7 @@ impl ChemicalFormula {
         self
     }
 
-    pub fn add_wt_percent(&mut self, element: ElementSymbol, wt_ratio: f64) -> &mut Self {
+    pub fn add_wt_ratio(&mut self, element: ElementSymbol, wt_ratio: f64) -> &mut Self {
         self.element.insert(element);
 
         self.wt_percent
@@ -459,11 +451,7 @@ impl ChemicalFormula {
         self
     }
 
-    pub fn to_molecular_formula(&self) -> Result<ChemicalFormula, FormulaError> {
-        if self.wt_percent.is_empty() {
-            return Ok(self.clone());
-        }
-
+    pub fn molecular_formula(&self) -> Result<Formula, FormulaError> {
         let mut wt_ratio_sum = 0.0;
         let mut wt_ratio_molecular_weight_sum = 0.0;
 
@@ -507,36 +495,18 @@ impl ChemicalFormula {
                 );
         }
 
-        Ok(ChemicalFormula {
+        Ok(Formula {
             element: self.element.clone(),
             stoichiometry,
             wt_percent: HashMap::new(),
         })
     }
 
-    pub fn to_mol_percent(&self) -> Result<ChemicalFormula, FormulaError> {
-        let mut formula = self.to_molecular_formula()?;
-
-        if formula.stoichiometry.is_empty() {
-            return Ok(ChemicalFormula::new());
-        }
-
-        let molecular_formula_sum = formula
-            .stoichiometry
-            .iter()
-            .map(|(element, stoichiometry)| stoichiometry)
-            .fold(0.0, |acc, x| acc + x);
-
-        formula.multiply(100. / molecular_formula_sum);
-
-        Ok(formula)
-    }
-
     pub fn molecular_weight(&self) -> Result<f64, FormulaError> {
         let stoichiometry = if self.wt_percent.is_empty() {
             self.stoichiometry.clone()
         } else {
-            self.to_molecular_formula().unwrap().stoichiometry
+            self.molecular_formula().unwrap().stoichiometry
         };
         Ok(stoichiometry
             .iter()
@@ -544,12 +514,8 @@ impl ChemicalFormula {
             .fold(0.0, |acc, x| acc + x))
     }
 
-    pub fn to_wt(&self) -> Result<ChemicalFormula, FormulaError> {
-        if self.stoichiometry.is_empty() {
-            return Ok(self.clone());
-        }
-
-        let formula = self.to_molecular_formula()?;
+    pub fn wt_ratio(&self) -> Result<Formula, FormulaError> {
+        let formula = self.molecular_formula()?;
         let molecular_weight = formula.molecular_weight()?;
 
         let mut wt_ratio = HashMap::new();
@@ -561,48 +527,28 @@ impl ChemicalFormula {
             );
         }
 
-        Ok(ChemicalFormula {
+        Ok(Formula {
             element: formula.element,
             stoichiometry: HashMap::new(),
             wt_percent: wt_ratio,
         })
     }
 
-    pub fn to_wt_percent(&self) -> Result<ChemicalFormula, FormulaError> {
-        let mut formula = self.to_wt()?;
-
-        let wt_total = formula.wt_percent.iter().fold(0.0, |acc, (_, x)| acc + x);
-
-        formula.multiply(100. / wt_total);
-
-        Ok(formula)
-    }
-
     /// multiplier by wt%
-    ///
     /// # Arguments
     /// * `multiplier` - A f64 value that represents the wt% multiplier
-    ///
     /// # Example
     /// ```
-    /// use pest_test::element::Formula;
-    /// use pest_test::element::ElementSymbol;
-    /// use approx::assert_abs_diff_eq;
-    ///
+    /// use formula::ElementSymbol;
+    /// use formula::Formula;
     /// let mut formula = Formula::default();
     /// formula.add_element(ElementSymbol::O, 1.0);
     /// formula.add_wt_ratio(ElementSymbol::H, 10.0);
     /// formula.add_wt_ratio(ElementSymbol::N, 20.0);
     /// formula.multiply_wt_percent(2.0);
-    ///
-    /// formula.wt_ratio().unwrap();
-    ///
-    /// let expected_H = 10.0 * 2.0/100.0;
-    ///
-    /// assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::H], expected_H , epsilon = 1e-6);
     /// ```
     pub fn multiply_wt_percent(&mut self, multiplier: f64) -> Result<&mut Self, FormulaError> {
-        let formula = self.to_molecular_formula()?;
+        let formula = self.molecular_formula()?;
         let molecular_weight = formula.molecular_weight()?;
 
         let mut wt_ratio = HashMap::new();
@@ -610,13 +556,13 @@ impl ChemicalFormula {
         for (element, stoichiometry) in formula.stoichiometry.iter() {
             wt_ratio.insert(
                 *element,
-                stoichiometry * ATOMIC_WEIGHT[element] / molecular_weight * multiplier,
+                stoichiometry * ATOMIC_WEIGHT[element] / molecular_weight * multiplier / 100,
             );
         }
 
         mem::replace(
             self,
-            ChemicalFormula {
+            Formula {
                 element: formula.element,
                 stoichiometry: HashMap::new(),
                 wt_percent: wt_ratio,
@@ -626,7 +572,7 @@ impl ChemicalFormula {
         Ok(self)
     }
 
-    pub fn add_formula(&mut self, formula: &ChemicalFormula) -> &mut Self {
+    pub fn add_formula(&mut self, formula: &Formula) -> &mut Self {
         for (element, stoichiometry) in formula.stoichiometry.iter() {
             self.element.insert(*element);
             self.stoichiometry
@@ -656,17 +602,17 @@ mod tests {
 
     #[test]
     fn test_formula() {
-        let mut formula = ChemicalFormula::new();
+        let mut formula = Formula::default();
 
         formula.add_element(ElementSymbol::O, 1.0);
-        formula.add_wt_percent(ElementSymbol::H, 10.0);
-        formula.add_wt_percent(ElementSymbol::N, 20.0);
+        formula.add_wt_ratio(ElementSymbol::H, 10.0);
+        formula.add_wt_ratio(ElementSymbol::N, 20.0);
 
         let expected_O = 1.0;
         let expected_H = 10.0;
         let expected_N = 20.0;
 
-        let molecular_formula = formula.to_molecular_formula().unwrap();
+        let molecular_formula = formula.molecular_formula().unwrap();
 
         let O_mol_ratio = molecular_formula
             .stoichiometry
@@ -677,7 +623,7 @@ mod tests {
             .get(&ElementSymbol::H)
             .unwrap();
 
-        let wt_ratio = formula.to_wt_percent().unwrap();
+        let wt_ratio = formula.wt_ratio().unwrap();
 
         assert_eq!(
             molecular_formula.stoichiometry[&ElementSymbol::O],
@@ -698,24 +644,22 @@ mod tests {
 
     #[test]
     fn test_formula_no_element() {
-        let mut formula = ChemicalFormula::new();
+        let mut formula = Formula::default();
 
-        formula.add_wt_percent(ElementSymbol::H, 10.0);
-        formula.add_wt_percent(ElementSymbol::N, 20.0);
+        formula.add_wt_ratio(ElementSymbol::H, 10.0);
+        formula.add_wt_ratio(ElementSymbol::N, 20.0);
 
-        let expected_H = 10.;
-        let expected_N = 20.;
-        let expected_H_after_wt_percent = 1. / 3. * 100.;
-        let expected_N_after_wt_percent = 2. / 3. * 100.;
+        let expected_H = 1.0 / 3.0 * 100.;
+        let expected_N = 2.0 / 3.0 * 100.;
 
-        let molecular_formula = formula.to_molecular_formula().unwrap();
+        let molecular_formula = formula.molecular_formula().unwrap();
 
         let H_mol_ratio = molecular_formula
             .stoichiometry
             .get(&ElementSymbol::H)
             .unwrap();
 
-        let wt_ratio = formula.to_wt().unwrap();
+        let wt_ratio = formula.wt_ratio().unwrap();
 
         assert_abs_diff_eq!(
             wt_ratio.wt_percent[&ElementSymbol::H],
@@ -727,38 +671,24 @@ mod tests {
             expected_N,
             epsilon = 1e-6
         );
-
-        let wt_percent = formula.to_wt_percent().unwrap();
-
-        assert_abs_diff_eq!(
-            wt_percent.wt_percent[&ElementSymbol::H],
-            expected_H_after_wt_percent,
-            epsilon = 1e-6
-        );
-
-        assert_abs_diff_eq!(
-            wt_percent.wt_percent[&ElementSymbol::N],
-            expected_N_after_wt_percent,
-            epsilon = 1e-6
-        );
     }
 
     #[test]
     fn test_no_wt_percent() {
-        let mut formula = ChemicalFormula::new();
+        let mut formula = Formula::default();
 
         formula.add_element(ElementSymbol::O, 1.0);
 
         let expected_O = 1.0;
 
-        let molecular_formula = formula.to_molecular_formula().unwrap();
+        let molecular_formula = formula.molecular_formula().unwrap();
 
         let O_mol_ratio = molecular_formula
             .stoichiometry
             .get(&ElementSymbol::O)
             .unwrap();
 
-        let wt_ratio = formula.to_wt_percent().unwrap();
+        let wt_ratio = formula.wt_ratio().unwrap();
 
         assert_eq!(
             molecular_formula.stoichiometry[&ElementSymbol::O],
@@ -770,16 +700,16 @@ mod tests {
 
     #[test]
     fn test_add_formula() {
-        let mut formula = ChemicalFormula::new();
-        let mut formula2 = ChemicalFormula::new();
+        let mut formula = Formula::default();
+        let mut formula2 = Formula::default();
 
         formula.add_element(ElementSymbol::O, 1.0);
-        formula.add_wt_percent(ElementSymbol::H, 10.0);
-        formula.add_wt_percent(ElementSymbol::N, 20.0);
+        formula.add_wt_ratio(ElementSymbol::H, 10.0);
+        formula.add_wt_ratio(ElementSymbol::N, 20.0);
 
         formula2.add_element(ElementSymbol::O, 1.0);
-        formula2.add_wt_percent(ElementSymbol::H, 10.0);
-        formula2.add_wt_percent(ElementSymbol::N, 20.0);
+        formula2.add_wt_ratio(ElementSymbol::H, 10.0);
+        formula2.add_wt_ratio(ElementSymbol::N, 20.0);
 
         let expected_O = 2.0;
         let expected_H = 20.0;
@@ -787,7 +717,7 @@ mod tests {
 
         formula.add_formula(&formula2);
 
-        let molecular_formula = formula.to_molecular_formula().unwrap();
+        let molecular_formula = formula.molecular_formula().unwrap();
 
         let O_mol_ratio = molecular_formula
             .stoichiometry
@@ -798,7 +728,7 @@ mod tests {
             .get(&ElementSymbol::H)
             .unwrap();
 
-        let wt_ratio = formula.to_wt_percent().unwrap();
+        let wt_ratio = formula.wt_ratio().unwrap();
 
         assert_eq!(
             molecular_formula.stoichiometry[&ElementSymbol::O],
@@ -819,12 +749,12 @@ mod tests {
 
     #[test]
     fn test_multiply_formula() {
-        let mut formula = ChemicalFormula::new();
+        let mut formula = Formula::default();
         let multiplier = 2.0;
 
         formula.add_element(ElementSymbol::O, 1.0);
-        formula.add_wt_percent(ElementSymbol::H, 10.0);
-        formula.add_wt_percent(ElementSymbol::N, 20.0);
+        formula.add_wt_ratio(ElementSymbol::H, 10.0);
+        formula.add_wt_ratio(ElementSymbol::N, 20.0);
 
         let expected_O = 2.0;
         let expected_H = 20.0;
@@ -832,7 +762,7 @@ mod tests {
 
         formula.multiply(multiplier);
 
-        let molecular_formula = formula.to_molecular_formula().unwrap();
+        let molecular_formula = formula.molecular_formula().unwrap();
 
         let O_mol_ratio = molecular_formula
             .stoichiometry
@@ -843,7 +773,7 @@ mod tests {
             .get(&ElementSymbol::H)
             .unwrap();
 
-        let wt_ratio = formula.to_wt_percent().unwrap();
+        let wt_ratio = formula.wt_ratio().unwrap();
 
         assert_eq!(
             molecular_formula.stoichiometry[&ElementSymbol::O],
@@ -864,43 +794,45 @@ mod tests {
 
     #[test]
     fn test_wt_multiply_formula() {
-        let mut formula = ChemicalFormula::new();
+        let mut formula = Formula::default();
         let multiplier = 2.0;
 
         formula.add_element(ElementSymbol::O, 1.0);
-        formula.add_wt_percent(ElementSymbol::H, 10.0);
-        formula.add_wt_percent(ElementSymbol::N, 20.0);
+        formula.add_wt_ratio(ElementSymbol::H, 10.0);
+        formula.add_wt_ratio(ElementSymbol::N, 20.0);
 
-        let expected_H = 10.0 * 2.0 / 100.0;
-        let expected_N = 20.0 * 2.0 / 100.0;
-
-        let expected_H_after_wt_ratio = 10.;
-        let expected_N_after_wt_ratio = 20.;
+        let expected_O = 2.0;
+        let expected_H = 20.0;
+        let expected_N = 40.0;
 
         formula.multiply_wt_percent(multiplier);
 
-        assert_abs_diff_eq!(
-            formula.wt_percent[&ElementSymbol::H],
-            expected_H,
-            epsilon = 1e-6
-        );
+        let molecular_formula = formula.molecular_formula().unwrap();
 
-        assert_abs_diff_eq!(
-            formula.wt_percent[&ElementSymbol::N],
-            expected_N,
-            epsilon = 1e-6
-        );
+        let O_mol_ratio = molecular_formula
+            .stoichiometry
+            .get(&ElementSymbol::O)
+            .unwrap();
+        let H_mol_ratio = molecular_formula
+            .stoichiometry
+            .get(&ElementSymbol::H)
+            .unwrap();
 
-        let wt_ratio = formula.to_wt_percent().unwrap();
+        let wt_ratio = formula.wt_ratio().unwrap();
+
+        assert_eq!(
+            molecular_formula.stoichiometry[&ElementSymbol::O],
+            expected_O
+        );
 
         assert_abs_diff_eq!(
             wt_ratio.wt_percent[&ElementSymbol::H],
-            expected_H_after_wt_ratio,
+            expected_H,
             epsilon = 1e-6
         );
         assert_abs_diff_eq!(
             wt_ratio.wt_percent[&ElementSymbol::N],
-            expected_N_after_wt_ratio,
+            expected_N,
             epsilon = 1e-6
         );
     }

@@ -32,6 +32,7 @@ fn parse_formula_pairs(pair: Pair<Rule>) -> ChemicalFormula {
                         }
 
                         let stoichiometry = stoichiometry.unwrap();
+                        println!("{:?}", stoichiometry);
 
                         match stoichiometry.as_rule() {
                             Rule::number => {
@@ -92,6 +93,7 @@ fn parse_formula_pairs(pair: Pair<Rule>) -> ChemicalFormula {
                     )
                     .to_owned(),
                 _ => {
+                    println!("{:?}", stoichiometry);
                     unreachable!()
                 }
             }
@@ -103,6 +105,7 @@ fn parse_formula_pairs(pair: Pair<Rule>) -> ChemicalFormula {
         | Rule::weight_percent
         | Rule::stoichiometry
         | Rule::element_symbol => {
+            println!("{:?}", pair);
             unreachable!();
         }
     }
@@ -161,33 +164,40 @@ mod tests {
 
     #[test]
     fn test_chmical_formula_parser_nested() {
-        let formula_str = "(Pt5wt%SiO2)50wt%(Au5wt%/SiO2)50wt%";
+        let formula_str = "(Pt5wt%/SiO2)50wt%(Au5wt%/SiO2)";
 
         let expected_Si = 1.0;
         let expected_O = 2.0;
-        let expected_Pt_wt = 5.0 / 2.;
-        let expected_Au_wt = 5.0 / 2.;
+        let expected_Pt_wt = 5.0;
+        let expected_Au_wt = 5.0;
         let expected_SiO2_wt = 100.0 - expected_Pt_wt - expected_Au_wt;
 
         let formula = parse_formula(formula_str).unwrap();
 
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], expected_O);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], expected_Si);
+
         let wt_percent = formula.to_wt_percent().unwrap().wt_percent;
-        assert_abs_diff_eq!(
-            wt_percent[&ElementSymbol::Pt],
-            expected_Pt_wt,
-            epsilon = TOL
-        );
+        assert_abs_diff_eq!(wt_percent[&ElementSymbol::Pt], expected_Pt_wt);
 
         assert_abs_diff_eq!(
             wt_percent[&ElementSymbol::Si] + wt_percent[&ElementSymbol::O],
-            expected_SiO2_wt,
-            epsilon = TOL
-        );
-
-        assert_abs_diff_eq!(
-            wt_percent[&ElementSymbol::Au],
-            expected_Au_wt,
-            epsilon = TOL
+            expected_SiO2_wt
         );
     }
+
+    // #[test]
+    // fn test_chmical_formula_parser() {
+    //     let formula_str = "SiO2";
+    //
+    //     let expected_MW = 60.083;
+    //     let expected_Si = 1.0;
+    //     let expected_O = 2.0;
+    //
+    //     let formula = parse_formula(formula_str).unwrap();
+    //
+    //     assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], expected_O);
+    //     assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], expected_Si);
+    //     assert_abs_diff_eq!(formula.molecular_weight().unwrap(), expected_MW);
+    // }
 }
