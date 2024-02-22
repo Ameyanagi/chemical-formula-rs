@@ -18,7 +18,6 @@ fn parse_formula_pairs(pair: Pair<Rule>) -> ChemicalFormula {
             .to_owned(),
         Rule::group => {
             let mut formula = ChemicalFormula::new();
-
             for p in pair.into_inner() {
                 match p.as_rule() {
                     Rule::element => {
@@ -163,8 +162,6 @@ mod tests {
     fn test_chmical_formula_parser_nested() {
         let formula_str = "(Pt5wt%SiO2)50wt%(Au5wt%/SiO2)50wt%";
 
-        let expected_Si = 1.0;
-        let expected_O = 2.0;
         let expected_Pt_wt = 5.0 / 2.;
         let expected_Au_wt = 5.0 / 2.;
         let expected_SiO2_wt = 100.0 - expected_Pt_wt - expected_Au_wt;

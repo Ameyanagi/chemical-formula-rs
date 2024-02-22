@@ -585,8 +585,8 @@ impl ChemicalFormula {
     ///
     /// # Example
     /// ```
-    /// use pest_test::element::Formula;
-    /// use pest_test::element::ElementSymbol;
+    /// use chemical_formula::element::Formula;
+    /// use chemical_formula::element::ElementSymbol;
     /// use approx::assert_abs_diff_eq;
     ///
     /// let mut formula = Formula::default();
