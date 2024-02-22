@@ -1,3 +1,22 @@
+//! # Chemical Formula Parser
+//!
+//! This module contains the parser for chemical formulas.
+//! The parser is implemented using the pest crate and the grammar is defined in the formula.pest file.
+//!
+//! The main function is `parse_formula` which takes a string and returns a `ChemicalFormula` struct.
+//!
+//! #Example:
+//! ```
+//! use chemical_formula::parser::parse_formula;
+//! use chemical_formula::prelude::*;
+//!
+//! let formula_str = "SiO2";
+//! let formula = parse_formula(formula_str).unwrap();
+//!
+//! assert_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0);
+//! assert_eq!(formula.stoichiometry[&ElementSymbol::Si], 1.0);
+//! ```
+
 use crate::element::{ChemicalFormula, ElementSymbol, FormulaError};
 use pest::Parser;
 use pest_derive::Parser;
@@ -9,6 +28,7 @@ use std::error::Error;
 #[grammar = "formula.pest"]
 pub struct ChemicalFormulaParser {}
 
+/// A recursive function to parse the chemical formula
 fn parse_formula_pairs(pair: Pair<Rule>) -> ChemicalFormula {
     match pair.as_rule() {
         Rule::formula => pair
@@ -106,6 +126,21 @@ fn parse_formula_pairs(pair: Pair<Rule>) -> ChemicalFormula {
         }
     }
 }
+
+/// Parse a chemical formula from a string
+///
+/// # Example
+///
+/// ```
+/// use chemical_formula::parser::parse_formula;
+/// use chemical_formula::prelude::*;
+///
+/// let formula_str = "SiO2";
+/// let formula = parse_formula(formula_str).unwrap();
+///
+/// assert_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0);
+/// assert_eq!(formula.stoichiometry[&ElementSymbol::Si], 1.0);
+/// ```
 pub fn parse_formula(s: &str) -> Result<ChemicalFormula, Box<dyn Error>> {
     let mut pairs = ChemicalFormulaParser::parse(Rule::formula, s)?;
 
