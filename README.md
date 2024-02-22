@@ -6,7 +6,7 @@
 
 ![Rust 1.74](https://img.shields.io/static/v1?logo=Rust&label=&message=1.74&color=grey)
 [![CI](https://github.com/Ameyanagi/chemical-formula-rs/workflows/CI/badge.svg?branch=develop)](https://github.com/Ameyanagi/chemical-formula-rs/actions?query=workflow%3ACI+branch%3Adevelop)
-![Crates.io - License](https://img.shields.io/crates/l/chemical-formula/0.0.1)
+![Crates.io - License](https://img.shields.io/crates/l/chemical-formula/0.1.0)
 
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Ameyanagi/chemical-formula-rs)
 [![open issues](https://img.shields.io/github/issues-raw/Ameyanagi/chemical-formula-rs)](https://github.com/Ameyanagi/chemical-formula-rs/issues)
@@ -104,5 +104,5 @@ Earlier Rust versions may be compatible, but this can change with minor or patch
 
 Which versions are affected by features and patches can be determined from the respective headings in [CHANGELOG.md](CHANGELOG.md).
 
-Note that dependencies of this crate may have a more lenient MSRV policy!
-Please use `cargo +nightly update -Z minimal-versions` in your automation if you don't generate Cargo.lock manually (or as necessary) and require support for a compiler older than current stable.
+<!-- Note that dependencies of this crate may have a more lenient MSRV policy! -->
+<!-- Please use `cargo +nightly update -Z minimal-versions` in your automation if you don't generate Cargo.lock manually (or as necessary) and require support for a compiler older than current stable. -->
