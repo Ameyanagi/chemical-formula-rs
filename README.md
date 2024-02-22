@@ -5,7 +5,9 @@
 [![Docs.rs](https://docs.rs/chemical-formula/badge.svg)](https://docs.rs/chemical-formula)
 
 ![Rust 1.74](https://img.shields.io/static/v1?logo=Rust&label=&message=1.74&color=grey)
-[![CI](https://github.com/Ameyanagi/chemical-formula-rs/workflows/CI/badge.svg?branch=develop)](https://github.com/Ameyanagi/chemical-formula-rs/actions?query=workflow%3ACI+branch%3Adevelop)
+
+<!-- [![CI](https://github.com/Ameyanagi/chemical-formula-rs/workflows/CI/badge.svg?branch=develop)](https://github.com/Ameyanagi/chemical-formula-rs/actions?query=workflow%3ACI+branch%3Adevelop) -->
+
 ![Crates.io - License](https://img.shields.io/crates/l/chemical-formula/0.1.0)
 
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Ameyanagi/chemical-formula-rs)
@@ -14,6 +16,7 @@
 [![good first issues](https://img.shields.io/github/issues-raw/Ameyanagi/chemical-formula-rs/good%20first%20issue?label=good+first+issues)](https://github.com/Ameyanagi/chemical-formula-rs/contribute)
 
 This crate provides a simple way to parse and manipulate chemical formulas including weight percent and nested formulas.
+
 The initial motivation was to parse a formula such as `Pt5wt%/SiO2`, which are heavily used annotation in the field of Heterogeneous catalysis.
 Another motivatation was to parse a formula that is nested such as `(Pt5wt%/SiO2)50wt%(CeO2)50wt%`, which can be used to describe a composite material.
 We also provide a way simple API to convert between molecular formula and weight percent.

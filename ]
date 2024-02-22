@@ -1,4 +1,5 @@
-//! # ElementSymbol
+//! Module defining the basic operations for elements and molecular_formula
+//!
 //! The elements up to Oganesson are defined.
 //!
 //! There is a None variant for the case where the element to express is not in the periodic table.
@@ -17,52 +18,6 @@
 //!
 //! let h = ElementSymbol::H;
 //! approx::assert_abs_diff_eq!(h.atomic_weight(), 1.008, epsilon = 1e-6);
-//! ```
-//!
-//! # ChemicalFormula
-//!
-//! The `ChemicalFormula` struct is used to represent a chemical formula.
-//! The `ChemicalFormula` struct has the following fields:
-//! * `element` - A `HashSet` of `ElementSymbol` enums.
-//! * `stoichiometry` - A `HashMap` of `ElementSymbol` enums and the stoichiometry.
-//! * `wt_percent` - A `HashMap` of `ElementSymbol` enums and the wt%.
-//!
-//! The `ChemicalFormula` struct has the following methods:
-//! * `add_element` - Add an element to the formula.
-//! * `add_wt_percent` - Add an element to the formula by wt%.
-//! * `multiply` - Multiply the stoichiometry and wt% by a multiplier.
-//! * `to_molecular_formula` - Convert the formula to molecular formula.
-//! * `to_mol_percent` - Convert the formula to mol%.
-//! * `molecular_weight` - Calculate the molecular weight of the formula.
-//! * `to_wt` - Calculate the molecular weight representation of the formula.
-//! * `to_wt_percent` - Convert the formula to wt%.
-//! * `multiply_wt_percent` - Multiply the wt% by a multiplier.
-//! * `add_formula` - Add another formula to the formula.
-//!
-//! Please refer to the API reference for more details.
-//!
-//! Follwing is a simple example of adding elements to the formula and add another formula to the formula.
-//!
-//! # Example
-//! ```
-//! use chemical_formula::prelude::*;
-//! use approx::assert_abs_diff_eq;
-//!
-//! let mut formula = ChemicalFormula::new();
-//! let mut formula2 = ChemicalFormula::new();
-//!
-//! formula.add_element(ElementSymbol::O, 1.0);
-//! formula.add_wt_percent(ElementSymbol::H, 10.0);
-//! formula.add_wt_percent(ElementSymbol::N, 20.0);
-//! formula2.add_element(ElementSymbol::O, 1.0);
-//! formula2.add_wt_percent(ElementSymbol::H, 10.0);
-//! formula2.add_wt_percent(ElementSymbol::N, 20.0);
-//! formula.add_formula(&formula2);
-//!
-//!
-//! assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0, epsilon = 1e-6);
-//! assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::H], 20.0, epsilon = 1e-6);
-//! assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::N], 40.0, epsilon = 1e-6);
 //! ```
 
 use once_cell::sync::Lazy;
@@ -105,8 +60,7 @@ impl std::fmt::Display for FormulaError {
 
 /// Hashmap of atomic weight
 ///
-/// The key is the `ElementSymbol` enums and the value is the atomic weight.
-///
+/// The key is the `ElementSymbol` enums and the value is the atomic weight
 ///
 /// # Example
 /// ```
@@ -117,9 +71,6 @@ impl std::fmt::Display for FormulaError {
 ///
 /// assert_abs_diff_eq!(ATOMIC_WEIGHT[&ElementSymbol::H], 1.008, epsilon = 1e-6)
 /// ```
-///
-/// # Reference
-/// [ATOMIC WEIGHTS OF THE ELEMENTS 2021](https://iupac.qmul.ac.uk/AtWt/)
 pub static ATOMIC_WEIGHT: Lazy<HashMap<ElementSymbol, f64>> = Lazy::new(|| {
     HashMap::from([
         (ElementSymbol::None, 0.0),
@@ -519,7 +470,6 @@ impl ElementSymbol {
     }
 }
 
-/// Struct to represent the chemical formula along wt%  
 #[derive(Debug, Clone, Default)]
 pub struct ChemicalFormula {
     pub element: HashSet<ElementSymbol>,
@@ -528,17 +478,6 @@ pub struct ChemicalFormula {
 }
 
 impl ChemicalFormula {
-    /// Create a empty ChemicalFormula
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// let formula = ChemicalFormula::new();
-    ///
-    /// assert!(formula.element.is_empty());
-    /// assert!(formula.stoichiometry.is_empty());
-    /// assert!(formula.wt_percent.is_empty());
-    /// ```
     pub fn new() -> Self {
         ChemicalFormula {
             element: HashSet::new(),
@@ -546,26 +485,6 @@ impl ChemicalFormula {
             wt_percent: HashMap::new(),
         }
     }
-
-    /// Add an element to the formula
-    ///
-    /// # Arguments
-    /// * `element` - A `ElementSymbol` enum
-    /// * `stoichiometry` - A f64 value that represents the stoichiometry
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    ///
-    /// let mut formula = ChemicalFormula::new();
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    ///
-    /// assert_eq!(formula.element.len(), 1);
-    /// assert_eq!(formula.stoichiometry.len(), 1);
-    ///
-    /// assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 1.0);
-    /// ```
     pub fn add_element(&mut self, element: ElementSymbol, stoichiometry: f64) -> &mut Self {
         self.element.insert(element);
 
@@ -577,31 +496,6 @@ impl ChemicalFormula {
         self
     }
 
-    /// Add an element to the formula by wt%
-    ///
-    /// # Arguments
-    /// * `element` - A `ElementSymbol` enum
-    /// * `wt_ratio` - A f64 value that represents the wt% ratio (0.0 - 100.0)
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    ///
-    /// let mut formula = ChemicalFormula::new();
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_wt_percent(ElementSymbol::O, 10.0);
-    /// formula.add_wt_percent(ElementSymbol::H, 20.0);
-    ///
-    ///
-    /// assert_eq!(formula.element.len(), 2);
-    /// assert_eq!(formula.wt_percent.len(), 2);
-    /// assert_eq!(formula.stoichiometry.len(), 1);
-    ///
-    /// assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::O], 10.0);
-    /// assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::H], 20.0);
-    /// ```
-    ///
     pub fn add_wt_percent(&mut self, element: ElementSymbol, wt_ratio: f64) -> &mut Self {
         self.element.insert(element);
 
@@ -612,30 +506,6 @@ impl ChemicalFormula {
         self
     }
 
-    /// Multiply the stoichiometry and wt% by a multiplier
-    ///
-    /// This method will simply multiply the stoichiometry and wt% by a multiplier.
-    /// The method will not check if the wt% sum is over 100.
-    ///
-    /// For example, if the formula has 10 wt% of H and the multiplier is 2, the resulting wt% of H
-    /// will be 20wt%. If the formula has stoichiometry of 1.0 of O and the multiplier is 2, the resulting
-    /// stoichiometry of O will be 2.0.
-    ///
-    /// # Arguments
-    /// * `multiplier` - A f64 value that represents the multiplier
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    ///
-    /// let mut formula = ChemicalFormula::new();
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_wt_percent(ElementSymbol::H, 10.0);
-    /// formula.multiply(2.0);
-    ///
-    /// assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::H], 20.0, epsilon = 1e-6);
-    /// assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0, epsilon = 1e-6);
-    /// ```
     pub fn multiply(&mut self, multiplier: f64) -> &mut Self {
         for (element, stoichiometry) in self.stoichiometry.iter_mut() {
             *stoichiometry *= multiplier;
@@ -647,33 +517,6 @@ impl ChemicalFormula {
         self
     }
 
-    /// Convert the formula to molecular formula
-    ///
-    /// This method will convert the wt% representation to molecular formula representation and
-    /// adds the stoichiometry.
-    ///
-    /// For example, Pt5%SiO2 will be converted to Pt0.016209751480873558SiO2.
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    ///
-    /// let mut formula = ChemicalFormula::new();
-    ///
-    /// formula.add_element(ElementSymbol::Si, 1.0);
-    /// formula.add_element(ElementSymbol::O, 2.0);
-    /// formula.add_wt_percent(ElementSymbol::Pt, 5.0);
-    ///
-    /// let molecular_formula = formula.to_molecular_formula().unwrap();
-    /// assert_abs_diff_eq!(molecular_formula.stoichiometry[&ElementSymbol::Pt], 0.016209751480873558, epsilon=1e-6);
-    /// assert_abs_diff_eq!(molecular_formula.stoichiometry[&ElementSymbol::Si], 1.0);
-    /// assert_abs_diff_eq!(molecular_formula.stoichiometry[&ElementSymbol::O], 2.0);
-    /// ```
-    ///
-    /// # Note
-    /// In the case where ChemicalFormula has no stoihiometry,the stoichiometry is a relative values.
-    /// This is because the wt% is a relative term and the absolute value of the stoichiometry cannot be determined.
     pub fn to_molecular_formula(&self) -> Result<ChemicalFormula, FormulaError> {
         if self.wt_percent.is_empty() {
             return Ok(self.clone());
@@ -729,28 +572,6 @@ impl ChemicalFormula {
         })
     }
 
-    /// Convert the formula to mol%
-    ///
-    /// This method will convert the wt% representation to mol% representation.
-    /// The method will first convert the wt% to molecular formula representation by calling `to_molecular_formula()`
-    /// and then normalize to mol%.
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    /// let mut formula = ChemicalFormula::new();
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_element(ElementSymbol::H, 2.0);
-    ///
-    /// let expected_O = 1./3. * 100.;
-    /// let expected_H = 2./3. * 100.;
-    ///
-    /// let mol_percent = formula.to_mol_percent().unwrap();
-    ///
-    /// assert_abs_diff_eq!(mol_percent.stoichiometry[&ElementSymbol::O], expected_O, epsilon = 1e-6);
-    /// assert_abs_diff_eq!(mol_percent.stoichiometry[&ElementSymbol::H], expected_H, epsilon = 1e-6);
-    /// ```
     pub fn to_mol_percent(&self) -> Result<ChemicalFormula, FormulaError> {
         let mut formula = self.to_molecular_formula()?;
 
@@ -769,23 +590,6 @@ impl ChemicalFormula {
         Ok(formula)
     }
 
-    /// Calculate the molecular weight of the formula
-    ///
-    /// This method will calculate the molecular weight of the formula.
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    /// let mut formula = ChemicalFormula::new();
-    ///
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_element(ElementSymbol::H, 2.0);
-    ///
-    /// let molecular_weight = formula.molecular_weight().unwrap();
-    /// assert_abs_diff_eq!(molecular_weight, 18.015, epsilon = 1e-6);
-    /// ```
-    ///
     pub fn molecular_weight(&self) -> Result<f64, FormulaError> {
         let stoichiometry = if self.wt_percent.is_empty() {
             self.stoichiometry.clone()
@@ -798,23 +602,6 @@ impl ChemicalFormula {
             .fold(0.0, |acc, x| acc + x))
     }
 
-    /// Calculate the molecular weight representation of the formula
-    ///
-    /// This method will calculate the weight ratio of the formula.
-    /// This method will not normalize to 100wt%.
-    /// Plsease use `to_wt()` or `to_wt_percent()` to normalize to 100wt%.
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    /// let mut formula = ChemicalFormula::new();
-    ///
-    /// formula.add_wt_percent(ElementSymbol::Na, 10.0);
-    ///
-    /// let wt_percent = formula.to_wt().unwrap();
-    /// assert_abs_diff_eq!(wt_percent.wt_percent[&ElementSymbol::Na], 10.0, epsilon = 1e-6);
-    /// ```
     pub fn to_wt(&self) -> Result<ChemicalFormula, FormulaError> {
         if self.stoichiometry.is_empty() {
             return Ok(self.clone());
@@ -839,37 +626,6 @@ impl ChemicalFormula {
         })
     }
 
-    /// Convert the formula to wt%
-    ///
-    /// This method will convert the stoichiometry representation to wt% representation.
-    ///
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    /// let mut formula = ChemicalFormula::new();
-    ///
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_element(ElementSymbol::H, 2.0);
-    /// formula.add_wt_percent(ElementSymbol::Na, 10.0);
-    ///
-    /// let wt_percent = formula.to_wt().unwrap();
-    /// assert_abs_diff_eq!(wt_percent.wt_percent[&ElementSymbol::Na], 10.0, epsilon = 1e-6);
-    /// assert_abs_diff_eq!(wt_percent.wt_percent[&ElementSymbol::H] +
-    /// wt_percent.wt_percent[&ElementSymbol::O], 90.0, epsilon = 1e-6);;
-    ///
-    ///
-    /// let mut formula = ChemicalFormula::new();
-    /// formula.add_wt_percent(ElementSymbol::H, 10.0);
-    /// formula.add_wt_percent(ElementSymbol::N, 20.0);
-    ///
-    /// let expected_H = 1.0/3.0 * 100.0;
-    /// let expected_N = 2.0/3.0 * 100.0;
-    ///
-    /// let wt_percent = formula.to_wt_percent().unwrap();
-    /// assert_abs_diff_eq!(wt_percent.wt_percent[&ElementSymbol::H], expected_H, epsilon = 1e-6);
-    /// assert_abs_diff_eq!(wt_percent.wt_percent[&ElementSymbol::N], expected_N, epsilon = 1e-6);
-    /// ```
     pub fn to_wt_percent(&self) -> Result<ChemicalFormula, FormulaError> {
         let mut formula = self.to_wt()?;
 
@@ -926,31 +682,6 @@ impl ChemicalFormula {
 
         Ok(self)
     }
-
-    /// Add another formula to the current formula
-    /// # Arguments
-    /// * `formula` - A `ChemicalFormula` to be added
-    /// # Example
-    /// ```
-    /// use chemical_formula::prelude::*;
-    /// use approx::assert_abs_diff_eq;
-    ///
-    /// let mut formula = ChemicalFormula::new();
-    /// let mut formula2 = ChemicalFormula::new();
-    ///
-    /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_wt_percent(ElementSymbol::H, 10.0);
-    /// formula.add_wt_percent(ElementSymbol::N, 20.0);
-    /// formula2.add_element(ElementSymbol::O, 1.0);
-    /// formula2.add_wt_percent(ElementSymbol::H, 10.0);
-    /// formula2.add_wt_percent(ElementSymbol::N, 20.0);
-    /// formula.add_formula(&formula2);
-    ///
-    ///
-    /// assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0, epsilon = 1e-6);
-    /// assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::H], 20.0, epsilon = 1e-6);
-    /// assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::N], 40.0, epsilon = 1e-6);
-    /// ```
 
     pub fn add_formula(&mut self, formula: &ChemicalFormula) -> &mut Self {
         for (element, stoichiometry) in formula.stoichiometry.iter() {
