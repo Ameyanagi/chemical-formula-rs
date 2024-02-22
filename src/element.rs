@@ -585,17 +585,16 @@ impl ChemicalFormula {
     ///
     /// # Example
     /// ```
-    /// use chemical_formula::element::Formula;
-    /// use chemical_formula::element::ElementSymbol;
+    /// use chemical_formula::prelude::*;
     /// use approx::assert_abs_diff_eq;
     ///
-    /// let mut formula = Formula::default();
+    /// let mut formula = ChemicalFormula::new();
     /// formula.add_element(ElementSymbol::O, 1.0);
-    /// formula.add_wt_ratio(ElementSymbol::H, 10.0);
-    /// formula.add_wt_ratio(ElementSymbol::N, 20.0);
+    /// formula.add_wt_percent(ElementSymbol::H, 10.0);
+    /// formula.add_wt_percent(ElementSymbol::N, 20.0);
     /// formula.multiply_wt_percent(2.0);
     ///
-    /// formula.wt_ratio().unwrap();
+    /// formula.to_wt_percent().unwrap();
     ///
     /// let expected_H = 10.0 * 2.0/100.0;
     ///
