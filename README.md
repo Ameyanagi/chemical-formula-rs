@@ -1,35 +1,70 @@
 # chemical-formula-rs
 
-[![Lib.rs](https://img.shields.io/badge/Lib.rs-*-84f)](https://lib.rs/crates/TODO_CRATE_NAME)
-[![Crates.io](https://img.shields.io/crates/v/TODO_CRATE_NAME)](https://crates.io/crates/TODO_CRATE_NAME)
-[![Docs.rs](https://docs.rs/TODO_CRATE_NAME/badge.svg)](https://docs.rs/TODO_CRATE_NAME)
+[![Lib.rs](https://img.shields.io/badge/Lib.rs-*-84f)](https://lib.rs/crates/chemical-formula)
+[![Crates.io](https://img.shields.io/crates/v/chemical-formula)](https://crates.io/crates/chemical-formula)
+[![Docs.rs](https://docs.rs/chemical-formula/badge.svg)](https://docs.rs/chemical-formula)
 
-![Rust 1.56](https://img.shields.io/static/v1?logo=Rust&label=&message=1.56&color=grey)
+![Rust 1.74](https://img.shields.io/static/v1?logo=Rust&label=&message=1.74&color=grey)
 [![CI](https://github.com/Ameyanagi/chemical-formula-rs/workflows/CI/badge.svg?branch=develop)](https://github.com/Ameyanagi/chemical-formula-rs/actions?query=workflow%3ACI+branch%3Adevelop)
-![Crates.io - License](https://img.shields.io/crates/l/TODO_CRATE_NAME/0.0.1)
+![Crates.io - License](https://img.shields.io/crates/l/chemical-formula/0.0.1)
 
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Ameyanagi/chemical-formula-rs)
 [![open issues](https://img.shields.io/github/issues-raw/Ameyanagi/chemical-formula-rs)](https://github.com/Ameyanagi/chemical-formula-rs/issues)
 [![open pull requests](https://img.shields.io/github/issues-pr-raw/Ameyanagi/chemical-formula-rs)](https://github.com/Ameyanagi/chemical-formula-rs/pulls)
 [![good first issues](https://img.shields.io/github/issues-raw/Ameyanagi/chemical-formula-rs/good%20first%20issue?label=good+first+issues)](https://github.com/Ameyanagi/chemical-formula-rs/contribute)
 
-[![crev reviews](https://web.crev.dev/rust-reviews/badge/crev_count/TODO_CRATE_NAME.svg)](https://web.crev.dev/rust-reviews/crate/TODO_CRATE_NAME/)
-[![Zulip Chat](https://img.shields.io/endpoint?label=chat&url=https%3A%2F%2Fiteration-square-automation.schichler.dev%2F.netlify%2Ffunctions%2Fstream_subscribers_shield%3Fstream%3Dproject%252FTODO_CRATE_NAME)](https://iteration-square.schichler.dev/#narrow/stream/project.2FTODO_CRATE_NAME)
-
-TODO_README_DESCRIPTION
+This crate provides a simple way to parse and manipulate chemical formulas including weight percent and nested formulas.
+The initial motivation was to parse a formula such as `Pt5wt%/SiO2`, which are heavily used annotation in the field of Heterogeneous catalysis.
+Another motivatation was to parse a formula that is nested such as `(Pt5wt%/SiO2)50wt%(CeO2)50wt%`, which can be used to describe a composite material.
+We also provide a way simple API to convert between molecular formula and weight percent.
 
 ## Installation
 
 Please use [cargo-edit](https://crates.io/crates/cargo-edit) to always add the latest version of this library:
 
 ```cmd
-cargo add TODO_CRATE_NAME
+cargo add chemical-formula
 ```
 
 ## Example
 
 ```rust
-// TODO_EXAMPLE
+use chemical_formula::prelude::*;
+
+fn main() {
+    let formula = parse_formula("H2O").unwrap();
+
+    println!("Orignal formula: {:?}", formula);
+    // Orignal formula: ChemicalFormula { element: {O, H}, stoichiometry: {H: 2.0, O: 1.0}, wt_percent: {} }
+
+    println!("Molecular weight: {:?}", formula.molecular_weight());
+    // Molecular weight: Ok(18.015)
+
+    println!("Wt%: {:?}", formula.to_wt_percent().unwrap());
+    // Wt%: ChemicalFormula { element: {O, H}, stoichiometry: {}, wt_percent: {H: 11.19067443796836, O: 88.80932556203165} }
+
+    let formula = parse_formula("Pt5wt%/SiO2").unwrap();
+
+    println!("Orignal formula: {:?}", formula);
+    // Orignal formula: ChemicalFormula { element: {Si, O, Pt}, stoichiometry: {Si: 1.0, O: 2.0}, wt_percent: {Pt: 5.0} }
+
+    println!(
+        "Molecular Formula: {:?}",
+        formula.to_molecular_formula().unwrap()
+    );
+    // Molecular Formula: ChemicalFormula { element: {Si, O, Pt}, stoichiometry: {Si: 1.0, Pt: 0.016209751480873558, O: 2.0}, wt_percent: {} }
+
+    println!("Wt%: {:?}", formula.to_wt_percent().unwrap());
+    // Wt%: ChemicalFormula { element: {Si, O, Pt}, stoichiometry: {}, wt_percent: {Pt: 5.0, Si: 44.406487692026026, O: 50.59351230797397} }
+
+    let formula = parse_formula("(Pt5wt%/SiO2)50wt%(CeO2)50wt%").unwrap();
+
+    println!("Orignal formula: {:?}", formula);
+    // Orignal formula: ChemicalFormula { element: {Si, Ce, Pt, O}, stoichiometry: {}, wt_percent: {Si: 22.203243846013017, O: 34.59233931398559, Pt: 2.5000000000000004, Ce: 40.70441684000139} }
+
+    println!("Wt%: {:?}", formula.to_wt_percent().unwrap());
+    // Wt%: ChemicalFormula { element: {Si, Ce, Pt, O}, stoichiometry: {}, wt_percent: {Si: 22.203243846013017, O: 34.59233931398559, Pt: 2.5000000000000004, Ce: 40.70441684000139} }
+}
 ```
 
 ## License
@@ -57,7 +92,7 @@ See [CONTRIBUTING](CONTRIBUTING.md) for more information.
 
 ## Versioning
 
-`TODO_CRATE_NAME` strictly follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) with the following exceptions:
+`chemical-formula-rs` strictly follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) with the following exceptions:
 
 - The minor version will not reset to 0 on major version changes (except for v1).  
   Consider it the global feature level.

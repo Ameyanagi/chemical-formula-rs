@@ -2,6 +2,33 @@
 name = "chemical-formula"
 version = "0.1.0"
 edition = "2021"
+authors = ["Ameyanagi <contact@ameyanagi.com>"]
+rust-version = "1.74"
+description = "Chemical formula parser that can handle wt% and nested structure"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Ameyanagi/chemical-formula-rs"
+homepage = "https://github.com/Ameyanagi/chemical-formula-rs/tree/v0.1.0"
+documentation = "https://docs.rs/Ameyanagi/chemical-formula/0.1.0"
+keywords = ["chemisty", "parser"]
+categories = ["Science", "Parsing Tools"] #TODO
+readme = "README.md"
+include = [
+  "**/*.rs",
+  "Cargo.toml",
+  "CHANGELOG.md",
+  "CODE_OF_CONDUCT.md",
+  "COPYRIGHT.md",
+  "LICENSE-*",
+  "README.md",
+  "SECURITY.md",
+]
+resolver = "2"
+publish = true
+
+[badges]
+is-it-maintained-issue-resolution = { repository = "Ameyanagi/chemical-formula-rs" }
+is-it-maintained-open-issues = { repository = "Ameyanagi/chemical-formula-rs" }
+maintenance = { status = "experimental" }                                            # This may differ between branches.
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
