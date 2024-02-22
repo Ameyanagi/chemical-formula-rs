@@ -14,6 +14,7 @@ categories = ["Science", "Parsing Tools"] #TODO
 readme = "README.md"
 include = [
   "**/*.rs",
+  "**/*.pest",
   "Cargo.toml",
   "CHANGELOG.md",
   "CODE_OF_CONDUCT.md",
