@@ -70,6 +70,21 @@ fn main() {
 }
 ```
 
+## Comparison with other crates
+
+There are other crates that deals with chemical formulas, but none of them can handle mixture of stoiometry and weight percent annotation.
+Following is a comparison of this crate with other crates.
+
+| Crate                                                                     | Can parse nested paranthesis | Can parse weight percentage |
+| ------------------------------------------------------------------------- | ---------------------------- | --------------------------- |
+| [chemical_formula](https://crates.io/crates/chemical_formula) (this work) | Yes                          | Yes                         |
+| [ATOMIO](https://crates.io/crates/atomio)                                 | Yes                          | No                          |
+| [acetylene_parser](https://crates.io/crates/acetylene_parser)             | Yes                          | No                          |
+| [chemical_elements](https://crates.io/crates/chemical_elements)           | Yes                          | No                          |
+| [chem-parse](https://crates.io/crates/chem-parse)                         | ?                            | No                          |
+
+For `chem-parse`, I couldn't check if it can parse nested paranthesis or not, since I failed to compile it.
+
 ## License
 
 Licensed under either of
