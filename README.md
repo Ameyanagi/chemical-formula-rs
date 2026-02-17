@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/chemical-formula)](https://crates.io/crates/chemical-formula)
 [![Docs.rs](https://docs.rs/chemical-formula/badge.svg)](https://docs.rs/chemical-formula)
 
-![Rust 1.74](https://img.shields.io/static/v1?logo=Rust&label=&message=1.74&color=grey)
+![Rust 1.83](https://img.shields.io/static/v1?logo=Rust&label=&message=1.83&color=grey)
 
 <!-- [![CI](https://github.com/Ameyanagi/chemical-formula-rs/workflows/CI/badge.svg?branch=develop)](https://github.com/Ameyanagi/chemical-formula-rs/actions?query=workflow%3ACI+branch%3Adevelop) -->
 
