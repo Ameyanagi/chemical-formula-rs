@@ -29,6 +29,18 @@ Please use [cargo-edit](https://crates.io/crates/cargo-edit) to always add the l
 cargo add chemical-formula
 ```
 
+## WASM Support
+
+The core Rust API is compatible with `wasm32-unknown-unknown`.
+
+```cmd
+rustup target add wasm32-unknown-unknown
+cargo check --target wasm32-unknown-unknown
+```
+
+This crate currently focuses on Rust-targeted WASM support.
+JavaScript bindings (for example via `wasm-bindgen`) are not included yet.
+
 ## Example
 
 ```rust

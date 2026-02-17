@@ -9,8 +9,8 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/Ameyanagi/chemical-formula-rs"
 homepage = "https://github.com/Ameyanagi/chemical-formula-rs/tree/v0.1.0"
 documentation = "https://docs.rs/Ameyanagi/chemical-formula/0.1.0"
-keywords = ["chemisty", "parser"]
-categories = ["Science", "Parsing Tools"] #TODO
+keywords = ["chemistry", "parser"]
+categories = ["science", "parser-implementations"]
 readme = "README.md"
 include = [
   "**/*.rs",
@@ -26,6 +26,10 @@ include = [
 resolver = "2"
 publish = true
 
+[features]
+default = []
+serde = ["dep:serde"]
+
 [badges]
 is-it-maintained-issue-resolution = { repository = "Ameyanagi/chemical-formula-rs" }
 is-it-maintained-open-issues = { repository = "Ameyanagi/chemical-formula-rs" }
@@ -37,6 +41,8 @@ maintenance = { status = "experimental" }                                       
 once_cell = "1.19.0"
 pest = "2.7.7"
 pest_derive = "2.7.7"
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
 approx = "0.5.1"
+serde_json = "1"

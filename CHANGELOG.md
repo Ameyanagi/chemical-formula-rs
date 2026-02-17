@@ -1,4 +1,4 @@
-# TODO_CRATE_NAME Changelog
+# chemical-formula Changelog
 
 <!-- markdownlint-disable no-trailing-punctuation -->
 
@@ -8,6 +8,4 @@
 
 Initial unstable release
 
-## next
-
-TODO: Date
+## Unreleased
