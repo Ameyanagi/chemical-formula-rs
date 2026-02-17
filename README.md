@@ -8,7 +8,7 @@
 
 <!-- [![CI](https://github.com/Ameyanagi/chemical-formula-rs/workflows/CI/badge.svg?branch=develop)](https://github.com/Ameyanagi/chemical-formula-rs/actions?query=workflow%3ACI+branch%3Adevelop) -->
 
-![Crates.io - License](https://img.shields.io/crates/l/chemical-formula/0.1.0)
+![Crates.io - License](https://img.shields.io/crates/l/chemical-formula/0.1.1)
 
 [![GitHub](https://img.shields.io/static/v1?logo=GitHub&label=&message=%20&color=grey)](https://github.com/Ameyanagi/chemical-formula-rs)
 [![open issues](https://img.shields.io/github/issues-raw/Ameyanagi/chemical-formula-rs)](https://github.com/Ameyanagi/chemical-formula-rs/issues)
