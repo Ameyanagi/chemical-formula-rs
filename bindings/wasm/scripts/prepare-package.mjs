@@ -26,6 +26,8 @@ packageJson.repository = {
 };
 packageJson.sideEffects = false;
 packageJson.files = [
+  "LICENSE-APACHE",
+  "LICENSE-MIT",
   "README.md",
   "chemical_formula_wasm.d.ts",
   "chemical_formula_wasm.js",
@@ -41,3 +43,5 @@ packageJson.exports = {
 
 await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 await copyFile(join(scriptDir, "..", "README.md"), join(packageDir, "README.md"));
+await copyFile(join(rootDir, "LICENSE-APACHE"), join(packageDir, "LICENSE-APACHE"));
+await copyFile(join(rootDir, "LICENSE-MIT"), join(packageDir, "LICENSE-MIT"));
