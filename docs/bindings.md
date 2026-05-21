@@ -56,14 +56,15 @@ Releases are driven by Git tags like `v0.2.0`.
 
 Before the first automated release:
 
-- Configure npm trusted publishing for `@ameyanagi/chemical-formula`.
+- Configure npm publishing for `@ameyanagi/chemical-formula`.
   - Workflow: `release.yml`
   - Environment: `npm`
+  - Secret: `NPM_TOKEN`
 - Configure PyPI trusted publishing for `chemical-formula-rs`.
   - Workflow: `release.yml`
   - Environment: `pypi`
 
-The release workflow publishes with OIDC trusted publishing. It does not require long-lived npm or PyPI tokens.
+The release workflow publishes npm with provenance and an `NPM_TOKEN` environment secret. PyPI publishing uses OIDC trusted publishing.
 
 ## Public Binding API
 
