@@ -1,0 +1,41 @@
+[build-system]
+requires = ["maturin>=1.12,<2"]
+build-backend = "maturin"
+
+[project]
+name = "chemical-formula-rs"
+version = "0.1.1"
+description = "Python bindings for chemical-formula"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT OR Apache-2.0"
+authors = [{ name = "Ameyanagi", email = "contact@ameyanagi.com" }]
+keywords = ["chemistry", "parser"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Rust",
+  "Topic :: Scientific/Engineering :: Chemistry"
+]
+
+[project.urls]
+Homepage = "https://github.com/Ameyanagi/chemical-formula-rs"
+Repository = "https://github.com/Ameyanagi/chemical-formula-rs"
+
+[dependency-groups]
+dev = [
+  "maturin>=1.12,<2",
+  "pytest>=8.0",
+  "ruff>=0.15.14"
+]
+
+[tool.maturin]
+bindings = "pyo3"
+manifest-path = "Cargo.toml"
+module-name = "chemical_formula_rs._native"
+python-source = "python"
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"

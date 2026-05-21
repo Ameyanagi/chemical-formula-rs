@@ -1,0 +1,20 @@
+from typing import TypedDict
+
+
+class FormulaSummary(TypedDict):
+    formula: str
+    elements: list[str]
+    stoichiometry: dict[str, float]
+    wt_percent: dict[str, float]
+
+
+def parse_formula(input: str) -> FormulaSummary: ...
+
+
+def to_molecular_formula(input: str) -> FormulaSummary: ...
+
+
+def to_wt_percent(input: str) -> FormulaSummary: ...
+
+
+def molecular_weight(input: str) -> float: ...

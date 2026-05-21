@@ -11,9 +11,10 @@
 //!
 //! This crate provides a simple way to parse and manipulate chemical formulas including weight percent and nested formulas.
 //!
-//! The initial motivation was to parse a formula such as `Pt5wt%/SiO2`, which are heavily used annotation in the field of Heterogeneous catalysis.
-//! Another motivatation was to parse a formula that is nested such as `(Pt5wt%/SiO2)50wt%(CeO2)50wt%`, which can be used to describe a composite material.
-//! We also provide a way simple API to convert between molecular formula and weight percent.
+//! The initial motivation was to parse a formula such as `Pt5wt%/SiO2`, which is heavily used annotation in the field of heterogeneous catalysis.
+//! The parser also accepts flexible catalyst loading notation such as `1%Pt/SiO2`, `Pt1%/SiO2`, and `1 wt % Pt / SiO2`, where bare `%` is treated as `wt%`.
+//! Another motivation was to parse a nested formula such as `(Pt5wt%/SiO2)50wt%(CeO2)50wt%`, which can be used to describe a composite material.
+//! We also provide a simple API to convert between molecular formula and weight percent.
 //!
 //! ## Installation
 //!
@@ -31,8 +32,8 @@
 //! fn main() {
 //!     let formula = parse_formula("H2O").unwrap();
 //!
-//!     println!("Orignal formula: {:?}", formula);
-//!     // Orignal formula: ChemicalFormula { element: {O, H}, stoichiometry: {H: 2.0, O: 1.0}, wt_percent: {} }
+//!     println!("Original formula: {:?}", formula);
+//!     // Original formula: ChemicalFormula { element: {O, H}, stoichiometry: {H: 2.0, O: 1.0}, wt_percent: {} }
 //!
 //!     println!("Molecular weight: {:?}", formula.molecular_weight());
 //!     // Molecular weight: Ok(18.015)
@@ -42,8 +43,8 @@
 //!
 //!     let formula = parse_formula("Pt5wt%/SiO2").unwrap();
 //!
-//!     println!("Orignal formula: {:?}", formula);
-//!     // Orignal formula: ChemicalFormula { element: {Si, O, Pt}, stoichiometry: {Si: 1.0, O: 2.0}, wt_percent: {Pt: 5.0} }
+//!     println!("Original formula: {:?}", formula);
+//!     // Original formula: ChemicalFormula { element: {Si, O, Pt}, stoichiometry: {Si: 1.0, O: 2.0}, wt_percent: {Pt: 5.0} }
 //!
 //!     println!(
 //!         "Molecular Formula: {:?}",
@@ -54,10 +55,13 @@
 //!     println!("Wt%: {:?}", formula.to_wt_percent().unwrap());
 //!     // Wt%: ChemicalFormula { element: {Si, O, Pt}, stoichiometry: {}, wt_percent: {Pt: 5.0, Si: 44.406487692026026, O: 50.59351230797397} }
 //!
+//!     let formula = parse_formula("1 wt % Pt / SiO2").unwrap();
+//!     println!("Flexible loading notation: {:?}", formula.to_wt_percent().unwrap());
+//!
 //!     let formula = parse_formula("(Pt5wt%/SiO2)50wt%(CeO2)50wt%").unwrap();
 //!
-//!     println!("Orignal formula: {:?}", formula);
-//!     // Orignal formula: ChemicalFormula { element: {Si, Ce, Pt, O}, stoichiometry: {}, wt_percent: {Si: 22.203243846013017, O: 34.59233931398559, Pt: 2.5000000000000004, Ce: 40.70441684000139} }
+//!     println!("Original formula: {:?}", formula);
+//!     // Original formula: ChemicalFormula { element: {Si, Ce, Pt, O}, stoichiometry: {}, wt_percent: {Si: 22.203243846013017, O: 34.59233931398559, Pt: 2.5000000000000004, Ce: 40.70441684000139} }
 //!
 //!     println!("Wt%: {:?}", formula.to_wt_percent().unwrap());
 //!     // Wt%: ChemicalFormula { element: {Si, Ce, Pt, O}, stoichiometry: {}, wt_percent: {Si: 22.203243846013017, O: 34.59233931398559, Pt: 2.5000000000000004, Ce: 40.70441684000139} }
@@ -77,3 +81,4 @@
 pub mod element;
 pub mod parser;
 pub mod prelude;
+pub mod summary;

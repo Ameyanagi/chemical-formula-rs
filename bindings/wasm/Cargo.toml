@@ -1,0 +1,19 @@
+[package]
+name = "chemical-formula-wasm"
+version = "0.1.1"
+edition = "2021"
+rust-version = "1.83"
+authors = ["Ameyanagi <contact@ameyanagi.com>"]
+description = "WASM bindings for chemical-formula"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Ameyanagi/chemical-formula-rs"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+chemical-formula = { path = "../..", features = ["serde"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
+wasm-bindgen = "0.2.105"

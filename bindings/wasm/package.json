@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wasm-pack build --target nodejs --out-dir pkg --release && bun run scripts/prepare-package.mjs",
+    "format": "oxfmt --check .",
+    "format:write": "oxfmt .",
+    "lint": "oxlint .",
+    "pack:dry-run": "npm pack --dry-run ./pkg",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "oxfmt": "0.51.0",
+    "oxlint": "1.66.0",
+    "wasm-pack": "0.15.0"
+  }
+}

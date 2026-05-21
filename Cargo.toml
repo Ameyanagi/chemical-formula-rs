@@ -23,8 +23,11 @@ include = [
   "README.md",
   "SECURITY.md",
 ]
-resolver = "2"
 publish = true
+
+[workspace]
+members = [".", "bindings/wasm", "bindings/python"]
+resolver = "2"
 
 [features]
 default = []
@@ -38,11 +41,9 @@ maintenance = { status = "experimental" }                                       
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-memchr = "2.8.0"
 once_cell = "1.21.3"
 pest = "2.8.6"
 pest_derive = "2.8.6"
-proc-macro2 = "1.0.106"
 serde = { version = "1.0.228", features = ["derive"], optional = true }
 
 [dev-dependencies]
