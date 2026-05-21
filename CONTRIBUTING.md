@@ -33,7 +33,18 @@ For anything else, please use the ["Custom issue"] template.
 
 Please keep your code human-readable.
 
-### Meta data
+### Pre-commit hooks
+
+This repository provides local [pre-commit](https://pre-commit.com/) hooks for Rust formatting, Clippy, and tests.
+
+```cmd
+uvx pre-commit install
+uvx pre-commit run --all-files
+```
+
+The hooks cover Rust formatting/tests, WASM TypeScript checks with oxlint and oxfmt, and Python checks with ruff.
+
+### Metadata
 
 Please add yourself to each copyright holders list of [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) when contributing, or alternatively include a note in your pull request that you intentionally didn't do so.
 

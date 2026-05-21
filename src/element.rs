@@ -3,9 +3,9 @@
 //!
 //! There is a None variant for the case where the element to express is not in the periodic table.
 //!
-//! Simple api to obtain a `ElementSymbol` from `&str` is provided as `.from_str()`.;
+//! A simple API to obtain an `ElementSymbol` from `&str` is provided as `.from_str()`.
 //!
-//! Simple api to retreve the atomic weight of the element is provided as `.atomic_weight()`.
+//! A simple API to retrieve the atomic weight of the element is provided as `.atomic_weight()`.
 //!
 //! # Example
 //! ```
@@ -41,7 +41,7 @@
 //!
 //! Please refer to the API reference for more details.
 //!
-//! Follwing is a simple example of adding elements to the formula and add another formula to the formula.
+//! The following is a simple example of adding elements to the formula and adding another formula to it.
 //!
 //! # Example
 //! ```
@@ -266,9 +266,9 @@ pub static ATOMIC_WEIGHT: Lazy<HashMap<ElementSymbol, f64>> = Lazy::new(|| {
 ///
 /// There is a None variant for the case where the element to express is not in the periodic table.
 ///
-/// Simple api to obtain a `ElementSymbol` from `&str` is provided as `.from_str()`.;
+/// A simple API to obtain an `ElementSymbol` from `&str` is provided as `.from_str()`.
 ///
-/// Simple api to retreve the atomic weight of the element is provided as `.atomic_weight()`.
+/// A simple API to retrieve the atomic weight of the element is provided as `.atomic_weight()`.
 ///
 /// # Example
 /// ```
@@ -714,7 +714,7 @@ impl ChemicalFormula {
     /// ```
     ///
     /// # Note
-    /// In the case where ChemicalFormula has no stoihiometry,the stoichiometry is a relative values.
+    /// When ChemicalFormula has no stoichiometry, the stoichiometry is a relative value.
     /// This is because the wt% is a relative term and the absolute value of the stoichiometry cannot be determined.
     pub fn to_molecular_formula(&self) -> Result<ChemicalFormula, FormulaError> {
         if self.wt_percent.is_empty() {
@@ -865,7 +865,7 @@ impl ChemicalFormula {
     ///
     /// This method will calculate the weight ratio of the formula.
     /// This method will not normalize to 100wt%.
-    /// Plsease use `to_wt()` or `to_wt_percent()` to normalize to 100wt%.
+    /// Please use `to_wt()` or `to_wt_percent()` to normalize to 100wt%.
     ///
     /// # Example
     /// ```

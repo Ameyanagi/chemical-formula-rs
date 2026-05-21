@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  verify-release-version:
+    name: Verify release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify tag matches package versions
+        id: version
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          failed=0
+
+          read_section_version() {
+            local file="$1"
+            local section="$2"
+            awk -v section="[${section}]" '
+              $0 == section { in_section = 1; next }
+              /^\[/ { if (in_section) exit; in_section = 0 }
+              in_section && $1 == "version" {
+                gsub(/"/, "", $3)
+                print $3
+                found = 1
+                exit
+              }
+              END { if (!found) exit 1 }
+            ' "$file"
+          }
+
+          check_version() {
+            local file="$1"
+            local section="$2"
+            local version
+            if ! version="$(read_section_version "$file" "$section")"; then
+              echo "::error::Could not read ${section} version from ${file}."
+              failed=1
+              return
+            fi
+            if [ "$version" != "$tag_version" ]; then
+              echo "::error::${file} version ${version} does not match tag v${tag_version}."
+              failed=1
+            fi
+          }
+
+          check_version Cargo.toml package
+          check_version bindings/wasm/Cargo.toml package
+          check_version bindings/python/Cargo.toml package
+          check_version bindings/python/pyproject.toml project
+
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+          echo "version=${tag_version}" >> "$GITHUB_OUTPUT"
+
+  npm:
+    name: Publish npm package
+    needs: verify-release-version
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - run: npm install -g npm@latest
+      - run: bun install --frozen-lockfile
+        working-directory: bindings/wasm
+      - run: bun run build
+        working-directory: bindings/wasm
+      - run: bun test
+        working-directory: bindings/wasm
+      - run: npm publish ./pkg --access public
+        working-directory: bindings/wasm
+
+  python-build:
+    name: Build Python wheels
+    needs: verify-release-version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --dev --no-install-project
+        working-directory: bindings/python
+      - run: uv run maturin build --release --out dist
+        working-directory: bindings/python
+      - run: uv run maturin sdist --out dist
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/python
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-${{ matrix.os }}
+          path: bindings/python/dist/*
+
+  pypi:
+    name: Publish PyPI package
+    needs: python-build
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: python-dist-*
+          path: dist
+          merge-multiple: true
+      - uses: astral-sh/setup-uv@v7
+      - run: uv publish --trusted-publishing always dist/*

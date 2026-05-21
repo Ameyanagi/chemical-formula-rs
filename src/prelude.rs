@@ -10,3 +10,7 @@
 //! You can import them individually as well.
 pub use crate::element::{ChemicalFormula, ElementSymbol, FormulaError};
 pub use crate::parser::parse_formula;
+pub use crate::summary::{
+    molecular_weight, parse_formula_summary, summarize_formula, to_molecular_formula_summary,
+    to_wt_percent_summary, FormulaSummary,
+};

@@ -54,6 +54,19 @@ fn parse_number_pair(pair: Pair<Rule>) -> Result<f64, FormulaError> {
         .map_err(|_| FormulaError::InvalidNumber(raw.to_owned()))
 }
 
+fn parse_weight_percent_pair(pair: Pair<Rule>, input: &str) -> Result<f64, FormulaError> {
+    let position = pair.as_span().start();
+    let mut inner = pair.into_inner();
+    let wt_pair = inner.next().ok_or_else(|| {
+        parse_error(
+            input,
+            Some(position),
+            "missing numeric value for weight percent",
+        )
+    })?;
+    parse_number_pair(wt_pair)
+}
+
 fn parse_stoichiometry_pair(
     pair: Pair<Rule>,
     input: &str,
@@ -67,14 +80,9 @@ fn parse_stoichiometry_pair(
         Rule::number => Ok(ParsedStoichiometry::Number(parse_number_pair(
             stoichiometry,
         )?)),
-        Rule::weight_percent => {
-            let mut wt_inner = stoichiometry.into_inner();
-            let wt_pair = wt_inner.next().ok_or_else(|| {
-                parse_error(input, None, "missing numeric value for weight percent")
-            })?;
-            let wt = parse_number_pair(wt_pair)?;
-            Ok(ParsedStoichiometry::WeightPercent(wt))
-        }
+        Rule::weight_percent => Ok(ParsedStoichiometry::WeightPercent(
+            parse_weight_percent_pair(stoichiometry, input)?,
+        )),
         _ => Err(parse_error(
             input,
             None,
@@ -93,7 +101,7 @@ fn parse_formula_pairs(pair: Pair<Rule>, input: &str) -> Result<ChemicalFormula,
             let mut formula = ChemicalFormula::new();
             for child in pair.into_inner() {
                 match child.as_rule() {
-                    Rule::element | Rule::group => {
+                    Rule::element | Rule::group | Rule::prefix_loading => {
                         let parsed = parse_formula_pairs(child, input)?;
                         formula.add_formula(&parsed);
                     }
@@ -116,7 +124,7 @@ fn parse_formula_pairs(pair: Pair<Rule>, input: &str) -> Result<ChemicalFormula,
 
             for child in pair.into_inner() {
                 match child.as_rule() {
-                    Rule::element | Rule::group => {
+                    Rule::element | Rule::group | Rule::prefix_loading => {
                         let parsed = parse_formula_pairs(child, input)?;
                         formula.add_formula(&parsed);
                     }
@@ -151,6 +159,38 @@ fn parse_formula_pairs(pair: Pair<Rule>, input: &str) -> Result<ChemicalFormula,
                 }
             }
 
+            Ok(formula)
+        }
+        Rule::prefix_loading => {
+            let pair_position = pair.as_span().start();
+            let mut inner = pair.into_inner();
+            let weight_percent_pair = inner.next().ok_or_else(|| {
+                parse_error(
+                    input,
+                    Some(pair_position),
+                    "missing weight percent in prefix loading",
+                )
+            })?;
+            let element_pair = inner.next().ok_or_else(|| {
+                parse_error(
+                    input,
+                    Some(pair_position),
+                    "missing element symbol in prefix loading",
+                )
+            })?;
+            let symbol: ElementSymbol = element_pair.as_str().parse()?;
+            let value = parse_weight_percent_pair(weight_percent_pair, input)?;
+
+            if inner.next().is_some() {
+                return Err(parse_error(
+                    input,
+                    Some(pair_position),
+                    "prefix loading has unexpected extra tokens",
+                ));
+            }
+
+            let mut formula = ChemicalFormula::new();
+            formula.add_wt_percent(symbol, value);
             Ok(formula)
         }
         Rule::element => {
@@ -245,6 +285,20 @@ mod tests {
 
     const TOL: f64 = 1e-10;
 
+    fn assert_pt_sio2_loading(formula_str: &str, expected_pt_wt: f64) {
+        let formula = parse_formula(formula_str).unwrap();
+
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], 1.0);
+
+        let wt_percent = formula.to_wt_percent().unwrap().wt_percent;
+        assert_abs_diff_eq!(wt_percent[&ElementSymbol::Pt], expected_pt_wt);
+        assert_abs_diff_eq!(
+            wt_percent[&ElementSymbol::Si] + wt_percent[&ElementSymbol::O],
+            100.0 - expected_pt_wt
+        );
+    }
+
     #[test]
     fn test_chemical_formula_parser() {
         let formula_str = "SiO2";
@@ -262,25 +316,81 @@ mod tests {
 
     #[test]
     fn test_chemical_formula_parser_wt_percent() {
-        let formula_str = "Pt5wt%/SiO2";
+        assert_pt_sio2_loading("Pt5wt%/SiO2", 5.0);
+    }
 
-        let expected_si = 1.0;
-        let expected_o = 2.0;
-        let expected_pt_wt = 5.0;
-        let expected_sio2_wt = 100.0 - expected_pt_wt;
+    #[test]
+    fn test_parse_flexible_catalyst_loading_notation() {
+        for formula_str in [
+            "1%Pt/SiO2",
+            "Pt1%/SiO2",
+            "1wt%Pt/SiO2",
+            "1 wt % Pt / SiO2",
+            "Pt 1 wt % / SiO2",
+            "1wt%Pt@SiO2",
+        ] {
+            assert_pt_sio2_loading(formula_str, 1.0);
+        }
+    }
 
-        let formula = parse_formula(formula_str).unwrap();
+    #[test]
+    fn test_parse_prefix_loading_binds_to_next_element() {
+        let formula = parse_formula("1%PtSiO2").unwrap();
 
-        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], expected_o);
-        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], expected_si);
+        assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::Pt], 1.0);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], 1.0);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0);
+    }
 
-        let wt_percent = formula.to_wt_percent().unwrap().wt_percent;
-        assert_abs_diff_eq!(wt_percent[&ElementSymbol::Pt], expected_pt_wt);
+    #[test]
+    fn test_parse_prefix_loading_does_not_bind_to_compound() {
+        let formula = parse_formula("10%CeO2/SiO2").unwrap();
+
+        assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::Ce], 10.0);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], 1.0);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 4.0);
+    }
+
+    #[test]
+    fn test_parse_group_bare_percent_loading() {
+        let formula = parse_formula("(CeO2)10%/SiO2").unwrap();
 
         assert_abs_diff_eq!(
-            wt_percent[&ElementSymbol::Si] + wt_percent[&ElementSymbol::O],
-            expected_sio2_wt
+            formula.wt_percent[&ElementSymbol::Ce] + formula.wt_percent[&ElementSymbol::O],
+            10.0,
+            epsilon = TOL
         );
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::Si], 1.0);
+        assert_abs_diff_eq!(formula.stoichiometry[&ElementSymbol::O], 2.0);
+    }
+
+    #[test]
+    fn test_parse_duplicate_and_signed_loading() {
+        let formula = parse_formula("1%Pt/2%Pt/SiO2").unwrap();
+        assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::Pt], 3.0);
+
+        let formula = parse_formula("-1%Pt/SiO2").unwrap();
+        assert_abs_diff_eq!(formula.wt_percent[&ElementSymbol::Pt], -1.0);
+    }
+
+    #[test]
+    fn test_parse_full_loading_keeps_existing_conversion_error() {
+        let formula = parse_formula("Pt100%/SiO2").unwrap();
+        assert!(matches!(
+            formula.to_molecular_formula(),
+            Err(FormulaError::DivisionByZero)
+        ));
+    }
+
+    #[test]
+    fn test_parse_invalid_loading_notation() {
+        assert!(parse_formula("1Pt/SiO2").is_err());
+        assert!(parse_formula("1%/SiO2").is_err());
+        assert!(parse_formula("Pt 1 / SiO2").is_err());
+        assert!(matches!(
+            parse_formula("1%Xx/SiO2"),
+            Err(FormulaError::InvalidElementSymbol(symbol)) if symbol == "Xx"
+        ));
     }
 
     #[test]

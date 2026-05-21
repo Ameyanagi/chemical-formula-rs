@@ -2,14 +2,16 @@ formula = { SOI ~ expr* ~ EOI }
 
 element = { element_symbol ~ stoichiometry? }
 
-number         = { ("+" | "-")? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
-weight_percent = { number ~ "wt%" }
-stoichiometry  = { weight_percent | number }
-group          = {
+number          = { ("+" | "-")? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
+inline_space    = _{ " " | "\t" }
+weight_percent = { number ~ inline_space* ~ ("wt" ~ inline_space*)? ~ "%" }
+stoichiometry   = { (inline_space* ~ weight_percent) | number }
+prefix_loading  = { weight_percent ~ inline_space* ~ element_symbol }
+group           = {
     (("(" ~ expr+ ~ ")") | ("[" ~ expr+ ~ "]") | ("{" ~ expr+ ~ "}")) ~ stoichiometry?
 }
 
 separator = _{ " " | "\t" | "." | "@" | "/" | NEWLINE }
-expr      = _{ element | group | separator }
+expr      = _{ prefix_loading | element | group | separator }
 
 element_symbol = @{ ASCII_ALPHA_UPPER ~ ASCII_ALPHA_LOWER? }

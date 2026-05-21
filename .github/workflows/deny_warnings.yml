@@ -20,7 +20,6 @@ jobs:
         toolchain: stable
         profile: minimal
         components: clippy
-    - run: cat CI.toml >> Cargo.toml
     - run: cargo clippy --workspace --locked --all-targets --no-default-features -- -D warnings
     - run: cargo clippy --workspace --locked --all-targets -- -D warnings
     - run: cargo clippy --workspace --locked --all-targets --all-features -- -D warnings

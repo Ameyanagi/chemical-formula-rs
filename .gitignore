@@ -1,1 +1,16 @@
-/target
+/target/
+
+# WASM/npm outputs
+/bindings/wasm/pkg/
+/bindings/wasm/*.tgz
+/bindings/wasm/node_modules/
+
+# Python build outputs
+/bindings/python/dist/
+/bindings/python/target/
+/bindings/python/.venv/
+/bindings/python/.pytest_cache/
+/bindings/python/.ruff_cache/
+/bindings/python/python/chemical_formula_rs/*.so
+__pycache__/
+*.py[cod]
