@@ -80,6 +80,7 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
       - run: npm install -g npm@latest
       - run: bun install --frozen-lockfile
         working-directory: bindings/wasm
@@ -89,9 +90,6 @@ jobs:
         working-directory: bindings/wasm
       - run: npm publish ./pkg --access public
         working-directory: bindings/wasm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"
 
   python-build:
     name: Build Python wheels
