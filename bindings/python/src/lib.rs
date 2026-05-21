@@ -13,17 +13,17 @@ fn py_error(error: FormulaError) -> PyErr {
 }
 
 fn summary_to_dict<'py>(py: Python<'py>, summary: FormulaSummary) -> PyResult<Bound<'py, PyDict>> {
-    let dict = PyDict::new_bound(py);
+    let dict = PyDict::new(py);
     dict.set_item("formula", summary.formula)?;
-    dict.set_item("elements", PyList::new_bound(py, summary.elements))?;
+    dict.set_item("elements", PyList::new(py, summary.elements)?)?;
 
-    let stoichiometry = PyDict::new_bound(py);
+    let stoichiometry = PyDict::new(py);
     for (element, value) in summary.stoichiometry {
         stoichiometry.set_item(element, value)?;
     }
     dict.set_item("stoichiometry", stoichiometry)?;
 
-    let wt_percent = PyDict::new_bound(py);
+    let wt_percent = PyDict::new(py);
     for (element, value) in summary.wt_percent {
         wt_percent.set_item(element, value)?;
     }
