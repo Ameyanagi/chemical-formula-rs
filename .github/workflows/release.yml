@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm:
+    name: Publish npm package
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest
+      - run: bun install --frozen-lockfile
+        working-directory: bindings/wasm
+      - run: bun run build
+        working-directory: bindings/wasm
+      - run: bun test
+        working-directory: bindings/wasm
+      - run: npm publish ./pkg --access public
+        working-directory: bindings/wasm
+        env:
+          NPM_CONFIG_PROVENANCE: "true"
+
+  python-build:
+    name: Build Python wheels
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --dev --no-install-project
+        working-directory: bindings/python
+      - run: uv run maturin build --release --out dist
+        working-directory: bindings/python
+      - run: uv run maturin sdist --out dist
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/python
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-${{ matrix.os }}
+          path: bindings/python/dist/*
+
+  pypi:
+    name: Publish PyPI package
+    needs: python-build
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: python-dist-*
+          path: dist
+          merge-multiple: true
+      - uses: astral-sh/setup-uv@v7
+      - run: uv publish --trusted-publishing always dist/*

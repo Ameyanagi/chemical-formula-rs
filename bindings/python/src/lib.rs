@@ -1,3 +1,5 @@
+#![allow(clippy::useless_conversion)]
+
 use chemical_formula::prelude::{
     molecular_weight as core_molecular_weight, parse_formula_summary, to_molecular_formula_summary,
     to_wt_percent_summary, FormulaError, FormulaSummary,

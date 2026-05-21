@@ -3,21 +3,49 @@ repos:
     hooks:
       - id: cargo-fmt
         name: cargo fmt
-        entry: cargo fmt --check
+        entry: cargo fmt --all --check
         language: system
         pass_filenames: false
-        files: ^(Cargo\.toml|Cargo\.lock|src/.*\.rs)$
+        files: ^(Cargo\.toml|Cargo\.lock|src/.*\.rs|bindings/.*/.*\.rs)$
 
       - id: cargo-clippy
         name: cargo clippy
-        entry: cargo clippy --all-targets --all-features -- -D warnings
+        entry: cargo clippy --workspace --all-targets --all-features -- -D warnings
         language: system
         pass_filenames: false
-        files: ^(Cargo\.toml|Cargo\.lock|src/.*\.(rs|pest))$
+        files: ^(Cargo\.toml|Cargo\.lock|src/.*\.(rs|pest)|bindings/.*/.*\.rs)$
 
       - id: cargo-test
         name: cargo test
-        entry: cargo test
+        entry: cargo test --workspace --all-features
         language: system
         pass_filenames: false
-        files: ^(Cargo\.toml|Cargo\.lock|src/.*\.(rs|pest))$
+        files: ^(Cargo\.toml|Cargo\.lock|src/.*\.(rs|pest)|bindings/.*/.*\.rs)$
+
+      - id: wasm-oxlint
+        name: wasm oxlint
+        entry: bash -c 'cd bindings/wasm && bun run lint'
+        language: system
+        pass_filenames: false
+        files: ^bindings/wasm/(package\.json|bun\.lock|scripts/.*\.mjs|tests/.*\.ts)$
+
+      - id: wasm-oxfmt
+        name: wasm oxfmt
+        entry: bash -c 'cd bindings/wasm && bun run format'
+        language: system
+        pass_filenames: false
+        files: ^bindings/wasm/(package\.json|bun\.lock|scripts/.*\.mjs|tests/.*\.ts)$
+
+      - id: python-ruff-check
+        name: python ruff check
+        entry: bash -c 'cd bindings/python && uv run ruff check .'
+        language: system
+        pass_filenames: false
+        files: ^bindings/python/.*\.pyi?$
+
+      - id: python-ruff-format
+        name: python ruff format
+        entry: bash -c 'cd bindings/python && uv run ruff format --check .'
+        language: system
+        pass_filenames: false
+        files: ^bindings/python/.*\.pyi?$

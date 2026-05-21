@@ -1,88 +1,66 @@
-# Largely inspired by https://github.com/dtolnay/syn/blob/master/.github/workflows/ci.yml under MIT OR Apache-2.0.
 name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
 
 permissions:
   contents: read
 
-on:
-  pull_request:
-  push:
-  # This used to also be scheduled, but apparently GitHub also turns it off otherwise when deactivating that due to repository inactivity.
-
 jobs:
-  test:
-    name: Test
+  rust:
+    name: Rust
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1.0.7
-      - run: cat CI.toml >> Cargo.toml
-      - run: cargo test --workspace --locked --no-default-features
-      - run: cargo test --workspace --locked
-      - run: cargo test --workspace --locked --all-features
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace --all-features
+      - run: CARGO_PROFILE_RELEASE_STRIP=false cargo build -p chemical-formula-wasm --target wasm32-unknown-unknown --release
 
-  wasm-check:
-    name: Check (wasm32-unknown-unknown)
+  wasm:
+    name: WASM / npm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1.0.7
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          profile: minimal
-          target: wasm32-unknown-unknown
-      - run: cat CI.toml >> Cargo.toml
-      - run: cargo +stable check --workspace --locked --target wasm32-unknown-unknown --no-default-features
-      - run: cargo +stable check --workspace --locked --target wasm32-unknown-unknown
-      - run: cargo +stable check --workspace --locked --target wasm32-unknown-unknown --all-features
+          targets: wasm32-unknown-unknown
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        working-directory: bindings/wasm
+      - run: bun run build
+        working-directory: bindings/wasm
+      - run: bun run lint
+        working-directory: bindings/wasm
+      - run: bun run format
+        working-directory: bindings/wasm
+      - run: bun test
+        working-directory: bindings/wasm
+      - run: npm pack --dry-run ./pkg
+        working-directory: bindings/wasm
 
-  miri:
-    name: Miri
+  python:
+    name: Python
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          toolchain: nightly
-          profile: minimal
-          components: miri, rust-src
-      - run: cat CI.toml >> Cargo.toml
-      - run: cargo +nightly miri test --workspace --locked --no-default-features
-      - run: cargo +nightly miri test --workspace --locked
-      - run: cargo +nightly miri test --workspace --locked --all-features
-
-  check:
-    name: Check on Rust ${{matrix.rust}}${{format(' ({0})', matrix.target || matrix.os)}}
-    runs-on: ${{matrix.os}}-latest
-    strategy:
-      matrix:
-        os: [macos, ubuntu, windows]
-        rust: ["1.83", stable, beta, nightly]
-    env:
-      target: ${{matrix.target && format('--target={0}', matrix.target)}}
-      workspace: ${{matrix.no-workspace || '--workspace'}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          toolchain: ${{matrix.rust}}
-          profile: minimal
-          target: ${{matrix.target}}
-      - run: cat CI.toml >> Cargo.toml
-      - run: cargo +${{matrix.rust}} check --locked ${{env.target}} ${{env.workspace}} --no-default-features
-      - run: cargo +${{matrix.rust}} check --locked ${{env.target}} ${{env.workspace}}
-      - run: cargo +${{matrix.rust}} check --locked ${{env.target}} ${{env.workspace}} --all-features
-
-  minimal-versions:
-    name: Minimal Versions
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          toolchain: nightly
-          override: true
-      - uses: taiki-e/install-action@cargo-hack
-      - uses: taiki-e/install-action@cargo-minimal-versions
-      - run: cat CI.toml >> Cargo.toml
-      - run: cargo minimal-versions check --workspace
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --dev --no-install-project
+        working-directory: bindings/python
+      - run: uv run maturin develop
+        working-directory: bindings/python
+      - run: uv run ruff check .
+        working-directory: bindings/python
+      - run: uv run ruff format --check .
+        working-directory: bindings/python
+      - run: uv run pytest
+        working-directory: bindings/python
+      - run: uv run maturin build
+        working-directory: bindings/python
