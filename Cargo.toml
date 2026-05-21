@@ -29,6 +29,9 @@ publish = true
 members = [".", "bindings/wasm", "bindings/python"]
 resolver = "2"
 
+[profile.release]
+strip = false
+
 [features]
 default = []
 serde = ["dep:serde"]

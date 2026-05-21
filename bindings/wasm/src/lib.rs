@@ -2,6 +2,8 @@ use chemical_formula::prelude::{
     molecular_weight, parse_formula_summary, to_molecular_formula_summary, to_wt_percent_summary,
     FormulaError, FormulaSummary,
 };
+use serde::Serialize;
+use serde_wasm_bindgen::Serializer;
 use wasm_bindgen::prelude::*;
 
 fn js_error(error: FormulaError) -> JsValue {
@@ -9,9 +11,10 @@ fn js_error(error: FormulaError) -> JsValue {
 }
 
 fn summary_to_js(result: Result<FormulaSummary, FormulaError>) -> Result<JsValue, JsValue> {
+    let serializer = Serializer::new().serialize_maps_as_objects(true);
     result
         .map_err(js_error)
-        .and_then(|summary| serde_wasm_bindgen::to_value(&summary).map_err(|err| err.into()))
+        .and_then(|summary| summary.serialize(&serializer).map_err(|err| err.into()))
 }
 
 #[wasm_bindgen(js_name = parseFormula)]

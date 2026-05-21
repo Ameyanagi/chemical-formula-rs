@@ -17,13 +17,12 @@ if (!version) {
 const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 packageJson.name = "@ameyanagi/chemical-formula";
 packageJson.version = version;
-packageJson.description =
-  "Chemical formula parser with catalyst loading notation support";
+packageJson.description = "Chemical formula parser with catalyst loading notation support";
 packageJson.license = "MIT OR Apache-2.0";
 packageJson.repository = {
   type: "git",
   url: "git+https://github.com/Ameyanagi/chemical-formula-rs.git",
-  directory: "bindings/wasm"
+  directory: "bindings/wasm",
 };
 packageJson.sideEffects = false;
 packageJson.files = [
@@ -31,13 +30,13 @@ packageJson.files = [
   "chemical_formula_wasm.d.ts",
   "chemical_formula_wasm.js",
   "chemical_formula_wasm_bg.wasm",
-  "package.json"
+  "package.json",
 ];
 packageJson.exports = {
   ".": {
     types: "./chemical_formula_wasm.d.ts",
-    default: "./chemical_formula_wasm.js"
-  }
+    default: "./chemical_formula_wasm.js",
+  },
 };
 
 await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);

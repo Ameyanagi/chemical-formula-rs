@@ -2,10 +2,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "wasm-pack build --target nodejs --out-dir pkg --release && bun run scripts/prepare-package.mjs",
-    "format": "oxfmt --check .",
-    "format:write": "oxfmt .",
-    "lint": "oxlint .",
+    "build": "CARGO_PROFILE_RELEASE_STRIP=false wasm-pack build --target nodejs --out-dir pkg --release && bun run scripts/prepare-package.mjs",
+    "format": "oxfmt --check package.json scripts tests",
+    "format:write": "oxfmt package.json scripts tests",
+    "lint": "oxlint scripts tests",
     "pack:dry-run": "npm pack --dry-run ./pkg",
     "test": "bun test"
   },
