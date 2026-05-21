@@ -37,7 +37,7 @@ packageJson.files = [
 packageJson.exports = {
   ".": {
     types: "./chemical_formula_wasm.d.ts",
-    default: "./chemical_formula_wasm.js",
+    node: "./chemical_formula_wasm.js",
   },
 };
 

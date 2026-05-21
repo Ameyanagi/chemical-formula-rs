@@ -26,16 +26,10 @@ fn sorted_elements(formula: &ChemicalFormula) -> Vec<ElementSymbol> {
 }
 
 fn summary_map(values: &std::collections::HashMap<ElementSymbol, f64>) -> BTreeMap<String, f64> {
-    let mut entries = values
+    values
         .iter()
         .filter(|(element, _)| **element != ElementSymbol::None)
-        .map(|(element, value)| (*element, *value))
-        .collect::<Vec<_>>();
-    entries.sort_by_key(|(element, _)| *element as u16);
-
-    entries
-        .into_iter()
-        .map(|(element, value)| (element.to_string(), value))
+        .map(|(element, value)| (element.to_string(), *value))
         .collect()
 }
 

@@ -19,9 +19,9 @@ jobs:
           targets: wasm32-unknown-unknown
           components: rustfmt, clippy
       - run: cargo fmt --all --check
-      - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
-      - run: cargo test --workspace --all-features
-      - run: CARGO_PROFILE_RELEASE_STRIP=false cargo build -p chemical-formula-wasm --target wasm32-unknown-unknown --release
+      - run: cargo clippy --workspace --locked --all-targets --all-features -- -D warnings
+      - run: cargo test --workspace --locked --all-features
+      - run: CARGO_PROFILE_RELEASE_STRIP=false cargo build --locked -p chemical-formula-wasm --target wasm32-unknown-unknown --release
 
   wasm:
     name: WASM / npm
@@ -62,5 +62,5 @@ jobs:
         working-directory: bindings/python
       - run: uv run pytest
         working-directory: bindings/python
-      - run: uv run maturin build
+      - run: uv run maturin build --release
         working-directory: bindings/python

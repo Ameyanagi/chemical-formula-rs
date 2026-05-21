@@ -55,10 +55,15 @@ fn parse_number_pair(pair: Pair<Rule>) -> Result<f64, FormulaError> {
 }
 
 fn parse_weight_percent_pair(pair: Pair<Rule>, input: &str) -> Result<f64, FormulaError> {
+    let position = pair.as_span().start();
     let mut inner = pair.into_inner();
-    let wt_pair = inner
-        .next()
-        .ok_or_else(|| parse_error(input, None, "missing numeric value for weight percent"))?;
+    let wt_pair = inner.next().ok_or_else(|| {
+        parse_error(
+            input,
+            Some(position),
+            "missing numeric value for weight percent",
+        )
+    })?;
     parse_number_pair(wt_pair)
 }
 
