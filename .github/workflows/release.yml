@@ -10,8 +10,64 @@ permissions:
   id-token: write
 
 jobs:
+  verify-release-version:
+    name: Verify release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify tag matches package versions
+        id: version
+        shell: bash
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          failed=0
+
+          read_section_version() {
+            local file="$1"
+            local section="$2"
+            awk -v section="[${section}]" '
+              $0 == section { in_section = 1; next }
+              /^\[/ { if (in_section) exit; in_section = 0 }
+              in_section && $1 == "version" {
+                gsub(/"/, "", $3)
+                print $3
+                found = 1
+                exit
+              }
+              END { if (!found) exit 1 }
+            ' "$file"
+          }
+
+          check_version() {
+            local file="$1"
+            local section="$2"
+            local version
+            if ! version="$(read_section_version "$file" "$section")"; then
+              echo "::error::Could not read ${section} version from ${file}."
+              failed=1
+              return
+            fi
+            if [ "$version" != "$tag_version" ]; then
+              echo "::error::${file} version ${version} does not match tag v${tag_version}."
+              failed=1
+            fi
+          }
+
+          check_version Cargo.toml package
+          check_version bindings/wasm/Cargo.toml package
+          check_version bindings/python/Cargo.toml package
+          check_version bindings/python/pyproject.toml project
+
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
+          echo "version=${tag_version}" >> "$GITHUB_OUTPUT"
+
   npm:
     name: Publish npm package
+    needs: verify-release-version
     runs-on: ubuntu-latest
     environment: npm
     steps:
@@ -38,6 +94,7 @@ jobs:
 
   python-build:
     name: Build Python wheels
+    needs: verify-release-version
     strategy:
       fail-fast: false
       matrix:

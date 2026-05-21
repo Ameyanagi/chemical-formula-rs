@@ -17,7 +17,6 @@ jobs:
         toolchain: nightly
         profile: minimal
         components: clippy
-    - run: cat CI.toml >> Cargo.toml
     - run: cargo +nightly clippy --workspace --locked --no-default-features
     - run: cargo +nightly clippy --workspace --locked
     - run: cargo +nightly clippy --workspace --locked --all-features
@@ -32,5 +31,4 @@ jobs:
         toolchain: nightly
         profile: minimal
         components: rustfmt
-    - run: cat CI.toml >> Cargo.toml
     - run: cargo +nightly fmt --all -- --check
