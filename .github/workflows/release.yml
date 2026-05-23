@@ -81,6 +81,19 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - name: Check npm package version
+        id: npm_version
+        shell: bash
+        run: |
+          package="@ameyanagi/chemical-formula"
+          version="${{ needs.verify-release-version.outputs.version }}"
+
+          if npm view "${package}@${version}" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "${package}@${version} is already published; skipping npm publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
       - run: npm install -g npm@latest
       - run: bun install --frozen-lockfile
         working-directory: bindings/wasm
@@ -89,6 +102,7 @@ jobs:
       - run: bun test
         working-directory: bindings/wasm
       - run: npm publish ./pkg --access public
+        if: steps.npm_version.outputs.exists != 'true'
         working-directory: bindings/wasm
 
   python-build:
@@ -127,4 +141,4 @@ jobs:
           path: dist
           merge-multiple: true
       - uses: astral-sh/setup-uv@v7
-      - run: uv publish --trusted-publishing always dist/*
+      - run: uv publish --trusted-publishing always --check-url https://pypi.org/simple/ dist/*

@@ -71,9 +71,16 @@ The release workflow publishes npm and PyPI through OIDC trusted publishing. It 
 TypeScript:
 
 ```ts
-import { molecularWeight, parseFormula } from "@ameyanagi/chemical-formula";
+import {
+  molecularWeight,
+  parseFormula,
+  toMolecularFormula,
+  toWtPercent,
+} from "@ameyanagi/chemical-formula";
 
 const summary = parseFormula("1 wt % Pt / SiO2");
+const molecular = toMolecularFormula("1%Pt/SiO2");
+const wtPercent = toWtPercent("H2O");
 const mw = molecularWeight("H2O");
 ```
 
@@ -83,6 +90,8 @@ Python:
 import chemical_formula_rs as cf
 
 summary = cf.parse_formula("1 wt % Pt / SiO2")
+molecular = cf.to_molecular_formula("1%Pt/SiO2")
+wt_percent = cf.to_wt_percent("H2O")
 mw = cf.molecular_weight("H2O")
 ```
 
@@ -92,3 +101,23 @@ Summary objects contain:
 - `elements`
 - `stoichiometry`
 - `wt_percent`
+
+Example summary for `1%Pt/SiO2`:
+
+```json
+{
+  "formula": "Pt1wt%O2Si",
+  "elements": ["O", "Si", "Pt"],
+  "stoichiometry": {
+    "O": 2,
+    "Si": 1
+  },
+  "wt_percent": {
+    "Pt": 1
+  }
+}
+```
+
+The bindings accept the same flexible loading notation as the Rust parser,
+including `1%Pt/SiO2`, `Pt1%/SiO2`, `1wt%Pt/SiO2`, `Pt1wt%/SiO2`,
+`1wt%Pt@SiO2`, and spaced input such as `1 wt % Pt / SiO2`.
